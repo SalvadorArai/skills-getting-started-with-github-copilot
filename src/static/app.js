@@ -12,6 +12,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Clear loading message
       activitiesList.innerHTML = "";
+      
+      // Clear existing dropdown options to prevent duplicates
+      activitySelect.innerHTML = "";
 
       // Populate activities list
       Object.entries(activities).forEach(([name, details]) => {
@@ -20,40 +23,70 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const spotsLeft = details.max_participants - details.participants.length;
 
-        // Build participants list
-        let participantsHTML = '';
+        // Build activity details using DOM APIs
+        const titleEl = document.createElement("h4");
+        titleEl.textContent = name;
+        activityCard.appendChild(titleEl);
+
+        const descriptionEl = document.createElement("p");
+        descriptionEl.textContent = details.description;
+        activityCard.appendChild(descriptionEl);
+
+        const scheduleEl = document.createElement("p");
+        const scheduleStrong = document.createElement("strong");
+        scheduleStrong.textContent = "Schedule:";
+        scheduleEl.appendChild(scheduleStrong);
+        scheduleEl.appendChild(document.createTextNode(" " + details.schedule));
+        activityCard.appendChild(scheduleEl);
+
+        const availabilityEl = document.createElement("p");
+        const availabilityStrong = document.createElement("strong");
+        availabilityStrong.textContent = "Availability:";
+        availabilityEl.appendChild(availabilityStrong);
+        availabilityEl.appendChild(document.createTextNode(" " + spotsLeft + " spots left"));
+        activityCard.appendChild(availabilityEl);
+
+        // Build participants section safely using DOM APIs
+        const participantsContainer = document.createElement("div");
+        participantsContainer.className = "participants";
+
+        const participantsHeader = document.createElement("h5");
+        participantsHeader.textContent = "Current Participants:";
+        participantsContainer.appendChild(participantsHeader);
+
         if (details.participants.length > 0) {
-          const participantsList = details.participants
-            .map(email => `
-              <li class="participant-item">
-                <span class="participant-email">${email}</span>
-                <button class="delete-btn" data-activity="${name}" data-email="${email}" title="Remove participant">🗑️</button>
-              </li>
-            `)
-            .join('');
-          participantsHTML = `
-            <div class="participants">
-              <h5>Current Participants:</h5>
-              <ul class="participants-list">${participantsList}</ul>
-            </div>
-          `;
+          const participantsListEl = document.createElement("ul");
+          participantsListEl.className = "participants-list";
+
+          details.participants.forEach(email => {
+            const li = document.createElement("li");
+            li.className = "participant-item";
+
+            const emailSpan = document.createElement("span");
+            emailSpan.className = "participant-email";
+            emailSpan.textContent = email;
+            li.appendChild(emailSpan);
+
+            const deleteBtn = document.createElement("button");
+            deleteBtn.className = "delete-btn";
+            deleteBtn.dataset.activity = name;
+            deleteBtn.dataset.email = email;
+            deleteBtn.title = "Remove participant";
+            deleteBtn.textContent = "🗑️";
+            li.appendChild(deleteBtn);
+
+            participantsListEl.appendChild(li);
+          });
+
+          participantsContainer.appendChild(participantsListEl);
         } else {
-          participantsHTML = `
-            <div class="participants">
-              <h5>Current Participants:</h5>
-              <p class="no-participants">No participants yet. Be the first to sign up!</p>
-            </div>
-          `;
+          const noParticipantsEl = document.createElement("p");
+          noParticipantsEl.className = "no-participants";
+          noParticipantsEl.textContent = "No participants yet. Be the first to sign up!";
+          participantsContainer.appendChild(noParticipantsEl);
         }
 
-        activityCard.innerHTML = `
-          <h4>${name}</h4>
-          <p>${details.description}</p>
-          <p><strong>Schedule:</strong> ${details.schedule}</p>
-          <p><strong>Availability:</strong> ${spotsLeft} spots left</p>
-          ${participantsHTML}
-        `;
-
+        activityCard.appendChild(participantsContainer);
         activitiesList.appendChild(activityCard);
 
         // Add option to select dropdown
